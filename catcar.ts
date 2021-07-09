@@ -627,20 +627,11 @@ namespace CatCar {
 
     let tcs_initialised = false
 
-    let red: number = 0
-    let green: number = 0
-    let blue: number = 0
-
-
-
     export enum TCSkleur {
       rood,
       groen,
       blauw
     }
-
-
-
 
     function tcs_write(reg: number, value: number): void {
         const tcs_buffer = pins.createBuffer(2)
@@ -707,7 +698,7 @@ namespace CatCar {
 
     //% block="kleuren sensor uitlezen"
     //% weight=153 group="Sensors" advanced=true
-    export function tcs_data() :void{
+    export function tcs_data() :number{
         if (!tcs_initialised){
             tcs_init();
         }
@@ -715,46 +706,45 @@ namespace CatCar {
         let rawGreen = 0
         let rawBlue = 0
 
+        //Take 10 samples to filter out mis-readings
         for ( let i = 0; i < 10; i++){
             rawRed = rawRed + tcs_read16(tcs_rdatal)
             rawGreen = rawGreen + tcs_read16(tcs_gdatal)
             rawBlue = rawBlue + tcs_read16(tcs_bdatal)
         }
-        red = rawRed / 10
-        green = rawGreen / 10
-        blue = rawBlue / 10
-
+        let red = rawRed / 10
+        let green = rawGreen / 10
+        let blue = rawBlue / 10
         
+        //For debugging, print to serial
         serial.writeValue("red", red)
         serial.writeValue("green", green)
         serial.writeValue("blue", blue)
         serial.writeLine("-")
         
-    }
+        //map to 8-bit values to give NeoPixelcolor compatible return
+        let red8 = Math.map(red, 0, 65535, 0, 255)
+        let green8 = Math.map(green, 0, 65535, 0, 255)
+        let blue8 = Math.map(blue, 0, 65535, 0, 255)
 
-    //% blockId="redIs" block="rood is" weight=152 group="Sensors" advanced=true
-    export function redIs(): number {
-        tcs_data();
-        return red
-    }
+        let totalColour
+        totalColour = red8 << 16
+        totalColour |= green8<<8
+        totalColour |= blue8
 
-    //% blockId="greenIs" block="groen is" weight=151 group="Sensors" advanced=true
-    export function greenIs(): number {
-        tcs_data();
-        return green
-    }
-
-    //% blockId="blueIs" block="blauw is" weight=150 group="Sensors" advanced=true
-    export function blueIs(): number {
-        tcs_data();
-        return blue
-    }    
+        return totalColour
+    } 
     
     //% block="kleur is %colour"
     //%weight=150 group="Sensors"
     export function checkColour(colour:NeoPixelColors):boolean{
         //Read the TCS colour value
-        tcs_data();
+        let colourData = tcs_data();
+
+        //Convert to seperate colours (for now)
+        let red = (colourData >> 16) & 0xff
+        let green = (colourData >> 8) & 0xff
+        let blue = colourData & 0xff
         //Compare with threshold values for
         //Blue
         if ((red<600) && (green<250) && (blue>200)){
@@ -785,40 +775,6 @@ namespace CatCar {
             serial.writeLine("Unsupported Colour Detected")
             return false
         }
-        
-    }
-
-    //% block="kleur is rood"
-    //% weight=149 group="Sensors""
-    export function roodtrue():boolean{
-        tcs_data();
-        if ((red<200) && (green<250) && (blue>200)){
-            serial.writeLine("het is blauw")
-            return true
-        }
-        return false
-    }
-    
-    //% block="kleur is groen"
-    //% weight=148 group="Sensors""
-    export function groentrue():boolean{
-        tcs_data();
-        if ((red>125) && (green<125) && (blue>125)){
-            serial.writeLine("het is groen")
-            return true
-        }
-        return false
-    }
-
-    //% block="kleur is blauw"
-    //% weight=147 group="Sensors""
-    export function blauwtrue():boolean{
-        tcs_data();
-        if ((red<200) && (green<250) && (blue>200)){
-            serial.writeLine("het is blauw")
-            return true
-        }
-        return false
     }
 }
 
