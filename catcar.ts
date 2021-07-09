@@ -598,4 +598,237 @@ namespace CatCar {
         }
         return temp;
     }
+
+
+    //_____________________________________________________________________________________________________//
+                //color sensor TCS34725
+
+    const tcs_cdatal = 0x14             /**< Clear channel data low byte */
+    const tcs_cdatah = 0x15             /**< Clear channel data high byte */
+    const tcs_rdatal = 0x16             /**< Red channel data low byte */
+    const tcs_rdatah = 0x17             /**< Red channel data high byte */
+    const tcs_gdatal = 0x18             /**< Green channel data low byte */
+    const tcs_gdatah = 0x19             /**< Green channel data high byte */
+    const tcs_bdatal = 0x1A             /**< Blue channel data low byte */
+    const tcs_bdatah = 0x1B             /**< Blue channel data high byte */
+
+    const tcs_adress = 0x29             /**< I2C address **/
+    const tcs_command_bit = 0x80        /**< Command bit **/
+    const tcs_id = 0x12                 /**< 0x44 = TCS34721/TCS34725, 0x4D = TCS34723/TCS34727 */
+
+    const tcs_enable = 0x00             /**< Interrupt Enable register */
+    const tcs_enable_pon = 0x01         /**< Power on - Writing 1 activates the internal oscillator, 0 disables it */
+    const tcs_enable_aen = 0x02         /**< RGBC Enable - Writing 1 actives the ADC, 0 disables it */
+
+    const tcs_atime = 0x01              /**< Integration time */
+    const tcs_integrationtime = 0xEB    /**< 50.4ms - 21 cycles - Max Count: 21504 */
+    const tcs_control = 0x0F            /**< Set the gain level for the sensor */
+    const tcs_gain = 0x02               /**< 0x00 = No gain; 0x01 = 4x gain; 0x02 = 16x gain; 0x03 = 60x gain  */
+
+    let tcs_initialised = false
+
+    let red: number = 0
+    let green: number = 0
+    let blue: number = 0
+
+
+
+    export enum TCSkleur {
+      rood,
+      groen,
+      blauw
+    }
+
+
+
+
+    function tcs_write(reg: number, value: number): void {
+        const tcs_buffer = pins.createBuffer(2)
+        tcs_buffer[0] = tcs_command_bit | reg
+        tcs_buffer[1] = value & 0xff
+        pins.i2cWriteBuffer(tcs_adress, tcs_buffer, false)
+    }
+
+
+    function tcs_read8(reg: number){
+        pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg, NumberFormat.Int8LE)
+        return pins.i2cReadNumber(tcs_adress, NumberFormat.Int8LE)
+    }
+
+    function tcs_read16(reg: number){
+        let x = 0;
+        let t = 0;
+
+        pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg, NumberFormat.Int8LE)
+        
+        t = pins.i2cReadNumber(tcs_adress, NumberFormat.UInt8LE)
+        x = pins.i2cReadNumber(tcs_adress, NumberFormat.UInt8LE)
+
+        return x;
+
+    }
+
+
+
+    //% block="init kleuren sensor"
+    //% weight=154 group="Sensors" advanced=true
+
+    export function tcs_init():boolean{
+        let x = 0
+        //serial.writeNumber(x)        
+        //serial.writeLine("Connected?")
+
+        x = tcs_read8(tcs_id)
+        //serial.writeNumber(x)
+
+        if ((x != 0x4d) && (x != 0x44) && (x != 0x10)) {
+            //serial.writeLine("NOOOO")
+            return false;
+        }
+        tcs_write(tcs_atime, tcs_integrationtime)
+        tcs_write(tcs_control, tcs_gain)
+
+        tcs_write(tcs_enable, tcs_enable_pon)
+        basic.pause(3);
+        tcs_write(tcs_enable, tcs_enable_pon | tcs_enable_aen)
+        /* Set a delay for the integration time.
+        This is only necessary in the case where enabling and then
+        immediately trying to read values back. This is because setting
+        AEN triggers an automatic integration, so if a read RGBC is
+        performed too quickly, the data is not yet valid and all 0's are
+        returned */
+        /* 12/5 = 2.4, add 1 to account for integer truncation */
+        basic.pause((256 - tcs_integrationtime) * 12 / 5 + 1);
+        //serial.writeLine("YEEAAHHH")
+
+        tcs_initialised = true;
+        return true;
+    }
+
+
+
+
+    //% block="kleuren sensor uitlezen"
+    //% weight=153 group="Sensors" advanced=true
+    export function tcs_data() :void{
+        if (!tcs_initialised){
+            tcs_init();
+        }
+        let rawRed = 0
+        let rawGreen = 0
+        let rawBlue = 0
+
+        for ( let i = 0; i < 10; i++){
+            rawRed = rawRed + tcs_read16(tcs_rdatal)
+            rawGreen = rawGreen + tcs_read16(tcs_gdatal)
+            rawBlue = rawBlue + tcs_read16(tcs_bdatal)
+        }
+        red = rawRed / 10
+        green = rawGreen / 10
+        blue = rawBlue / 10
+
+        /*
+        serial.writeValue("red", red)
+        serial.writeValue("green", green)
+        serial.writeValue("blue", blue)
+        serial.writeLine("-")
+        */
+    }
+
+    //% blockId="redIs" block="rood is" weight=152 group="Sensors" advanced=true
+    export function redIs(): number {
+        tcs_data();
+        return red
+    }
+
+    //% blockId="greenIs" block="groen is" weight=151 group="Sensors" advanced=true
+    export function greenIs(): number {
+        tcs_data();
+        return green
+    }
+
+    //% blockId="blueIs" block="blauw is" weight=150 group="Sensors" advanced=true
+    export function blueIs(): number {
+        tcs_data();
+        return blue
+    }    
+    
+    //% block="kleur is rood"
+    //% weight=149 group="Sensors""
+    export function roodtrue():boolean{
+        tcs_data();
+        if ((red<125) && (green>125) && (blue>125)){
+            serial.writeLine("het is rood")
+            return true
+        }
+        return false
+    }
+    
+    //% block="kleur is groen"
+    //% weight=148 group="Sensors""
+    export function groentrue():boolean{
+        tcs_data();
+        if ((red>125) && (green<125) && (blue>125)){
+            serial.writeLine("het is groen")
+            return true
+        }
+        return false
+    }
+
+    //% block="kleur is blauw"
+    //% weight=147 group="Sensors""
+    export function blauwtrue():boolean{
+        tcs_data();
+        if ((red>125) && (green>125) && (blue<125)){
+            serial.writeLine("het is blauw")
+            return true
+        }
+        return false
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    /**
+    * tcs34725 kleur uitlezen
+    * @param colorIs - (enum tcskleur)
+    * @param body TODO
+    */ 
+    //% block="kleur sensor is %colorIs " weight=152 group="Sensors"
+    /*
+    export function colorRead(colorIs: TCSkleur, body: () => void): void {
+        tcs_data();
+        serial.writeValue("red", red)
+        serial.writeValue("green", green)
+        serial.writeValue("blue", blue)
+        serial.writeLine("-")
+
+        if((colorIs === TCSkleur.rood) && (red<125) && (green>125) && (blue>125)) {
+            serial.writeLine("rood hier")
+        }
+        
+        while((colorIs === TCSkleur.groen) && (red>125) && (green<125) && (blue>125)) {
+            serial.writeLine("groen hier")
+        }
+        
+        while((colorIs === TCSkleur.blauw) && (red>125) && (green>125) && (blue<125)) {
+            serial.writeLine("blauw hier")
+        }
+    }
+    */    
+
 }
+
