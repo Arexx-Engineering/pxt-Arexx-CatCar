@@ -759,17 +759,26 @@ namespace CatCar {
         //Blue
         if ((red<600) && (green<250) && (blue>200)){
             serial.writeLine("het is blauw")
-            return (colour===NeoPixelColors.Blue)
+            if(colour===NeoPixelColors.Blue){
+                return true
+            }
+            return false
         }
         //Green
         if ((red>125) && (green<125) && (blue>125)){
             serial.writeLine("het is groen")
-            return (colour===NeoPixelColors.Green)
+            if(colour===NeoPixelColors.Green){
+                return true
+            }
+            return false
         }
         //Red
         if ((red<200) && (green<250) && (blue>200)){
             serial.writeLine("het is rood")
-            return (colour === NeoPixelColors.Red)
+            if(colour===NeoPixelColors.Red){
+                return true
+            }
+            return false
         }
         //If no supported colour is found, return false
         else{
