@@ -670,7 +670,6 @@ namespace CatCar {
         //serial.writeNumber(x)
 
         if ((x != 0x4d) && (x != 0x44) && (x != 0x10)) {
-            //serial.writeLine("NOOOO")
             return false;
         }
         tcs_write(tcs_atime, tcs_integrationtime)
@@ -727,6 +726,7 @@ namespace CatCar {
         let green8 = Math.map(green, 0, 65535, 0, 255)
         let blue8 = Math.map(blue, 0, 65535, 0, 255)
 
+        //Put the numbers into a single variable to return (24-bits RGB code)
         let totalColour
         totalColour = red8 << 16
         totalColour |= green8<<8
