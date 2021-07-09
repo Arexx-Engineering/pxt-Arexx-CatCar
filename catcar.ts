@@ -750,12 +750,41 @@ namespace CatCar {
         return blue
     }    
     
+    //% block="kleur is %colour"
+    //%weight=150 group="Sensors"
+    export function checkColour(colour:NeoPixelColors):boolean{
+        //Read the TCS colour value
+        tcs_data();
+        //Compare with threshold values for
+        //Blue
+        if ((red<600) && (green<250) && (blue>200)){
+            serial.writeLine("het is blauw")
+            return (colour===NeoPixelColors.Blue)
+        }
+        //Green
+        if ((red>125) && (green<125) && (blue>125)){
+            serial.writeLine("het is groen")
+            return (colour===NeoPixelColors.Green)
+        }
+        //Red
+        if ((red<200) && (green<250) && (blue>200)){
+            serial.writeLine("het is rood")
+            return (colour === NeoPixelColors.Red)
+        }
+        //If no supported colour is found, return false
+        else{
+            serial.writeLine("Unsupported Colour Detected")
+            return false
+        }
+        
+    }
+
     //% block="kleur is rood"
     //% weight=149 group="Sensors""
     export function roodtrue():boolean{
         tcs_data();
-        if ((red>600) && (green<250) && (blue<250)){
-            serial.writeLine("het is rood")
+        if ((red<200) && (green<250) && (blue>200)){
+            serial.writeLine("het is blauw")
             return true
         }
         return false
