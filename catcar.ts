@@ -13,6 +13,7 @@
 //% groups=["Motor", "LED", "Sensors","Utility"]
 namespace CatCar {
 
+    resetLedsEnMotor(); //Does this work? to just always have this function started at boot?
     /**
      * PCA9685 registers and adresses
     */
@@ -64,17 +65,17 @@ namespace CatCar {
     //Directional Enums
     //% group="Utility"
     export enum Turn {
-      links = 10,
-      rechts = 11,
+        links = 10,
+        rechts = 11,
     }
     //% group="Utility"
     export enum Directions {
-      voorwaards = 20,
-      achterwaards = 21,
+        voorwaards = 20,
+        achterwaards = 21,
     }
 
 
-//_____________________________________________________________________________________________________//
+    //_____________________________________________________________________________________________________//
 
     /**
      * Write to the PCA I/O expander
@@ -96,8 +97,8 @@ namespace CatCar {
         pinNumber = Math.constrain(pinNumber, 0, 15)
         const buffer = pins.createBuffer(2)
         const pinOffset = PinRegDistance * pinNumber
-        onStep = Math.constrain(onStep, 0, chipResolution-1)
-        offStep = Math.constrain(offStep, 0, chipResolution-1)
+        onStep = Math.constrain(onStep, 0, chipResolution - 1)
+        offStep = Math.constrain(offStep, 0, chipResolution - 1)
 
         // Low byte of onStep
         writePCA(chip_address, pinOffset + channel0OnStepLowByte, onStep & 0xFF)
@@ -110,7 +111,7 @@ namespace CatCar {
     }
 
 
-//_____________________________________________________________________________________________________//
+    //_____________________________________________________________________________________________________//
 
 
     /**
@@ -202,19 +203,19 @@ namespace CatCar {
     export function maakMiddenLeds(midred: number, midyellow: number, midblue: number): void {
         midred = Math.max(0, Math.min(100, midred))
         //midLeds are active low (current sink through PCA chip) so invert set value:
-        Math.map(midred,0,100,100,0)
+        Math.map(midred, 0, 100, 100, 0)
         //Convert value from 0-100 to 0-4095 for PCA chip
         const pwm_mr = (midred * (chipResolution - 1)) / 100
         writeloop(8, 0, pwm_mr)
 
         midyellow = Math.max(0, Math.min(100, midyellow))
-        Math.map(midyellow,0,100,100,0)
+        Math.map(midyellow, 0, 100, 100, 0)
         //Convert value from 0-100 to 0-4095 for PCA chip
         const pwm_my = (midyellow * (chipResolution - 1)) / 100
         writeloop(7, 0, pwm_my)
 
         midblue = Math.max(0, Math.min(100, midblue))
-        Math.map(midblue,0,100,100,0)
+        Math.map(midblue, 0, 100, 100, 0)
         //Convert value from 0-100 to 0-4095 for PCA chip
         const pwm_mb = (midblue * (chipResolution - 1)) / 100
         writeloop(6, 0, pwm_mb)
@@ -232,22 +233,22 @@ namespace CatCar {
     */
     //% block="Rijden %direction met snelheid %speed procent" weight=179 group="Motor"
     export function rijden(direction: Directions = 20, speed: number): void {
-      direction = Math.constrain(direction, Directions.voorwaards, Directions.achterwaards)
-      const pca_spd_value = (speed * (chipResolution - 1)) / 100
+        direction = Math.constrain(direction, Directions.voorwaards, Directions.achterwaards)
+        const pca_spd_value = (speed * (chipResolution - 1)) / 100
 
-      if(direction === Directions.voorwaards) {
-        writeloop(12, 0, pca_spd_value)
-        writeloop(13, 0, 0)
-        writeloop(14, 0, 0)
-        writeloop(15, 0, pca_spd_value)
-      }
+        if (direction === Directions.voorwaards) {
+            writeloop(12, 0, pca_spd_value)
+            writeloop(13, 0, 0)
+            writeloop(14, 0, 0)
+            writeloop(15, 0, pca_spd_value)
+        }
 
-      if(direction === Directions.achterwaards) {
-        writeloop(12, 0, 0)
-        writeloop(13, 0, pca_spd_value)
-        writeloop(14, 0, pca_spd_value)
-        writeloop(15, 0, 0)
-      }
+        if (direction === Directions.achterwaards) {
+            writeloop(12, 0, 0)
+            writeloop(13, 0, pca_spd_value)
+            writeloop(14, 0, pca_spd_value)
+            writeloop(15, 0, 0)
+        }
     }
 
 
@@ -256,25 +257,25 @@ namespace CatCar {
     * CatCar laten draaien
     * @param turning - Linksom of rechtsom (enum Turn)
     * @param speed - snelheid van de motor in %, eg:0-100
-    */ 
+    */
     //% block="Draai %turning met snelheid %speed procent" weight=178 group="Motor"
     export function draaien(turning: Turn = 10, speed: number): void {
-      turning = Math.constrain(turning, Turn.links, Turn.rechts)
-      const pca_spd_value = (speed * (chipResolution - 1)) / 100
+        turning = Math.constrain(turning, Turn.links, Turn.rechts)
+        const pca_spd_value = (speed * (chipResolution - 1)) / 100
 
-      if(turning === Turn.links) {
-        writeloop(12, 0, 0)
-        writeloop(13, 0, pca_spd_value)
-        writeloop(14, 0, 0)
-        writeloop(15, 0, pca_spd_value)
-      }
+        if (turning === Turn.links) {
+            writeloop(12, 0, 0)
+            writeloop(13, 0, pca_spd_value)
+            writeloop(14, 0, 0)
+            writeloop(15, 0, pca_spd_value)
+        }
 
-      if(turning === Turn.rechts) {
-        writeloop(12, 0, pca_spd_value)
-        writeloop(13, 0, 0)
-        writeloop(14, 0, pca_spd_value)
-        writeloop(15, 0, 0)
-      }
+        if (turning === Turn.rechts) {
+            writeloop(12, 0, pca_spd_value)
+            writeloop(13, 0, 0)
+            writeloop(14, 0, pca_spd_value)
+            writeloop(15, 0, 0)
+        }
     }
 
 
@@ -285,10 +286,10 @@ namespace CatCar {
     */
     //% block="Stoppen met rijden" weight=177 group="Motor"
     export function stoppenrijden(): void {
-      writeloop(12, 0, 0)
-      writeloop(13, 0, 0)
-      writeloop(14, 0, 0)
-      writeloop(15, 0, 0)
+        writeloop(12, 0, 0)
+        writeloop(13, 0, 0)
+        writeloop(14, 0, 0)
+        writeloop(15, 0, 0)
     }
 
 
@@ -303,72 +304,72 @@ namespace CatCar {
     */
     //% block="rijden %direction met snelheid %speed cm/s" weight=169 group="Motor"
     export function rijdensnelheid(direction: Directions = 20, speed: number): void {
-      led.enable (false)
-      direction = Math.max(20, Math.min(21, direction))
-      speed = Math.max(5, Math.min(20, speed))
+        led.enable(false)
+        direction = Math.max(20, Math.min(21, direction))
+        speed = Math.max(5, Math.min(20, speed))
 
-      if (speed != setspeedloop){
-        setspeedloop = speed;
-        target_rps_rotor = (speed * 10 / wheelCircumference * gearBoxRatio)
-        targetSpeed = (((target_rps_rotor - 45) / 7.24) + 10)
-        const pca_spd_value = (targetSpeed * (chipResolution - 1)) / 100
-        speedLeft = speedRight = pca_spd_value
+        if (speed != setspeedloop) {
+            setspeedloop = speed;
+            target_rps_rotor = (speed * 10 / wheelCircumference * gearBoxRatio)
+            targetSpeed = (((target_rps_rotor - 45) / 7.24) + 10)
+            const pca_spd_value = (targetSpeed * (chipResolution - 1)) / 100
+            speedLeft = speedRight = pca_spd_value
 
-        if(direction === 20) {
-          writeloop(12, 0, speedLeft)
-          writeloop(13, 0, 0)
-          writeloop(14, 0, 0)
-          writeloop(15, 0, speedRight)
+            if (direction === 20) {
+                writeloop(12, 0, speedLeft)
+                writeloop(13, 0, 0)
+                writeloop(14, 0, 0)
+                writeloop(15, 0, speedRight)
+            }
+
+            if (direction === 21) {
+                writeloop(12, 0, 0)
+                writeloop(13, 0, speedLeft)
+                writeloop(14, 0, speedRight)
+                writeloop(15, 0, 0)
+            }
         }
 
-        if(direction === 21) {
-          writeloop(12, 0, 0)
-          writeloop(13, 0, speedLeft)
-          writeloop(14, 0, speedRight)
-          writeloop(15, 0, 0)
+        rotationsLeft = wheelrotationsLeft();
+        rotationsRight = wheelrotationsRight();
+
+        serial.writeLine("rechts:")
+        serial.writeNumber(rotationsRight)
+
+        serial.writeLine("left:")
+        serial.writeNumber(rotationsLeft)
+
+
+        if (rotationsRight <= target_rps_rotor) {
+            speedRight = speedRight + 10
         }
-      }
-
-      rotationsLeft = wheelrotationsLeft();
-      rotationsRight = wheelrotationsRight();
-
-      serial.writeLine("rechts:")
-      serial.writeNumber(rotationsRight)
-
-      serial.writeLine("left:")
-      serial.writeNumber(rotationsLeft)
+        if (rotationsRight >= target_rps_rotor) {
+            speedRight = speedRight - 10
+        }
 
 
-      if (rotationsRight <= target_rps_rotor) {
-        speedRight = speedRight + 10
-      }
-      if (rotationsRight >= target_rps_rotor) {
-        speedRight = speedRight - 10
-      }
+        if (rotationsLeft <= target_rps_rotor) {
+            speedLeft = speedLeft + 10
+        }
+        if (rotationsLeft >= target_rps_rotor) {
+            speedLeft = speedLeft - 10
+        }
 
+        basic.pause(500)
 
-      if (rotationsLeft <= target_rps_rotor) {
-        speedLeft = speedLeft + 10
-      }
-      if (rotationsLeft >= target_rps_rotor) {
-        speedLeft = speedLeft - 10
-      }
+        if (direction === 20) {
+            writeloop(12, 0, speedLeft)
+            writeloop(13, 0, 0)
+            writeloop(14, 0, 0)
+            writeloop(15, 0, speedRight)
+        }
 
-      basic.pause(500)
-
-      if(direction === 20) {
-        writeloop(12, 0, speedLeft)
-        writeloop(13, 0, 0)
-        writeloop(14, 0, 0)
-        writeloop(15, 0, speedRight)
-      }
-
-      if(direction === 21) {
-        writeloop(12, 0, 0)
-        writeloop(13, 0, speedLeft)
-        writeloop(14, 0, speedRight)
-        writeloop(15, 0, 0)
-      }
+        if (direction === 21) {
+            writeloop(12, 0, 0)
+            writeloop(13, 0, speedLeft)
+            writeloop(14, 0, speedRight)
+            writeloop(15, 0, 0)
+        }
     }
 
 
@@ -381,27 +382,27 @@ namespace CatCar {
     //% block="afstand ultrasoon"
     //% weight=159 group="Sensors"
     export function sonar(): number {
-      // send pulse
-      led.enable (false);
-      let trig = DigitalPin.P6
-      let echo = DigitalPin.P7
-      let maxCmDistance = 23200
+        // send pulse
+        led.enable(false);
+        let trig = DigitalPin.P6
+        let echo = DigitalPin.P7
+        let maxCmDistance = 23200
 
-      pins.setPull(trig, PinPullMode.PullNone)
-      let d
-      for (let x=0; x<10; x++) {
-        pins.digitalWritePin(trig, 0)
-        control.waitMicros(2)
-        pins.digitalWritePin(trig, 1)
-        control.waitMicros(15)
-        pins.digitalWritePin(trig, 0)
-        // read pulse
-        d = pins.pulseIn(echo, PulseValue.High, maxCmDistance);
-        if (d>0)
-          break;
-      }
-      d = Math.floor(d/58);
-      return d;
+        pins.setPull(trig, PinPullMode.PullNone)
+        let d
+        for (let x = 0; x < 10; x++) {
+            pins.digitalWritePin(trig, 0)
+            control.waitMicros(2)
+            pins.digitalWritePin(trig, 1)
+            control.waitMicros(15)
+            pins.digitalWritePin(trig, 0)
+            // read pulse
+            d = pins.pulseIn(echo, PulseValue.High, maxCmDistance);
+            if (d > 0)
+                break;
+        }
+        d = Math.floor(d / 58);
+        return d;
     }
 
 
@@ -435,9 +436,9 @@ namespace CatCar {
     */
     //% blockId="startOdometrieMonitoring" block="start odometrie" weight=99 group="Motor" advanced=true
     export function startOdometrieMonitoring(): void {
-      if (odometrieMonitorStarted) return;
+        if (odometrieMonitorStarted) return;
 
-        led.enable (false);
+        led.enable(false);
         pins.setPull(DigitalPin.P4, PinPullMode.PullNone)
         pins.setPull(DigitalPin.P13, PinPullMode.PullNone)
 
@@ -468,18 +469,18 @@ namespace CatCar {
 
         // Update value every 0.5 seconds
         control.inBackground(() => {
-          while (true) {
-            basic.pause(500)
-            rotationsLeft = numRotorTurnsLeft * 2
-            numRotorTurnsLeft = 0
-          }
+            while (true) {
+                basic.pause(500)
+                rotationsLeft = numRotorTurnsLeft * 2
+                numRotorTurnsLeft = 0
+            }
         })
 
         control.inBackground(() => {
             while (true) {
-              basic.pause(500)
-              rotationsRight = numRotorTurnsRight * 2
-              numRotorTurnsRight = 0
+                basic.pause(500)
+                rotationsRight = numRotorTurnsRight * 2
+                numRotorTurnsRight = 0
             }
         })
 
@@ -529,10 +530,10 @@ namespace CatCar {
             case voorkantIR.zietIets: {
                 serial.writeNumber(pins.analogReadPin(AnalogPin.P3))
                 if (pins.analogReadPin(AnalogPin.P3) < 800) {
-                
+
                     temp = true;
                 }
-                else {                 
+                else {
                     temp = false;
                 }
                 break;
@@ -601,7 +602,7 @@ namespace CatCar {
 
 
     //_____________________________________________________________________________________________________//
-                //color sensor TCS34725
+    //color sensor TCS34725
 
     const tcs_cdatal = 0x14             /**< Clear channel data low byte */
     const tcs_cdatah = 0x15             /**< Clear channel data high byte */
@@ -628,9 +629,9 @@ namespace CatCar {
     let tcs_initialised = false
 
     export enum TCSkleur {
-      rood,
-      groen,
-      blauw
+        rood,
+        groen,
+        blauw
     }
 
     function tcs_write(reg: number, value: number): void {
@@ -641,17 +642,17 @@ namespace CatCar {
     }
 
 
-    function tcs_read8(reg: number){
+    function tcs_read8(reg: number) {
         pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg, NumberFormat.Int8LE)
         return pins.i2cReadNumber(tcs_adress, NumberFormat.Int8LE)
     }
 
-    function tcs_read16(reg: number){
+    function tcs_read16(reg: number) {
         let x = 0;
         let t = 0;
 
         pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg, NumberFormat.Int8LE)
-        
+
         return pins.i2cReadNumber(tcs_adress, NumberFormat.UInt16LE)
 
     }
@@ -661,7 +662,7 @@ namespace CatCar {
     //% block="init kleuren sensor"
     //% weight=154 group="Sensors" advanced=true
 
-    export function tcs_init():boolean{
+    export function tcs_init(): boolean {
         let x = 0
         //serial.writeNumber(x)        
         //serial.writeLine("Connected?")
@@ -697,8 +698,8 @@ namespace CatCar {
 
     //% block="kleuren sensor uitlezen"
     //% weight=153 group="Sensors" advanced=true
-    export function tcs_data() :number{
-        if (!tcs_initialised){
+    export function tcs_data(): number {
+        if (!tcs_initialised) {
             tcs_init();
         }
         let rawRed = 0
@@ -706,7 +707,7 @@ namespace CatCar {
         let rawBlue = 0
 
         //Take 10 samples to filter out mis-readings
-        for ( let i = 0; i < 10; i++){
+        for (let i = 0; i < 10; i++) {
             rawRed = rawRed + tcs_read16(tcs_rdatal)
             rawGreen = rawGreen + tcs_read16(tcs_gdatal)
             rawBlue = rawBlue + tcs_read16(tcs_bdatal)
@@ -714,13 +715,13 @@ namespace CatCar {
         let red = rawRed / 10
         let green = rawGreen / 10
         let blue = rawBlue / 10
-        
+
         //For debugging, print to serial
         serial.writeValue("red", red)
         serial.writeValue("green", green)
         serial.writeValue("blue", blue)
         serial.writeLine("-")
-        
+
         //map to 8-bit values to give NeoPixelcolor compatible return
         let red8 = Math.map(red, 0, 65535, 0, 255)
         let green8 = Math.map(green, 0, 65535, 0, 255)
@@ -729,15 +730,15 @@ namespace CatCar {
         //Put the numbers into a single variable to return (24-bits RGB code)
         let totalColour
         totalColour = red8 << 16
-        totalColour |= green8<<8
+        totalColour |= green8 << 8
         totalColour |= blue8
 
         return totalColour
-    } 
-    
+    }
+
     //% block="kleur is %colour"
     //%weight=150 group="Sensors"
-    export function checkColour(colour:NeoPixelColors):boolean{
+    export function checkColour(colour: NeoPixelColors): boolean {
         //Read the TCS colour value
         let colourData = tcs_data();
 
@@ -747,31 +748,31 @@ namespace CatCar {
         let blue = colourData & 0xff
         //Compare with threshold values for
         //Blue
-        if ((red<600) && (green<250) && (blue>200)){
+        if ((red < 600) && (green < 250) && (blue > 200)) {
             serial.writeLine("het is blauw")
-            if(colour===NeoPixelColors.Blue){
+            if (colour === NeoPixelColors.Blue) {
                 return true
             }
             return false
         }
         //Green
-        if ((red>125) && (green<125) && (blue>125)){
+        if ((red > 125) && (green < 125) && (blue > 125)) {
             serial.writeLine("het is groen")
-            if(colour===NeoPixelColors.Green){
+            if (colour === NeoPixelColors.Green) {
                 return true
             }
             return false
         }
         //Red
-        if ((red<200) && (green<250) && (blue>200)){
+        if ((red < 200) && (green < 250) && (blue > 200)) {
             serial.writeLine("het is rood")
-            if(colour===NeoPixelColors.Red){
+            if (colour === NeoPixelColors.Red) {
                 return true
             }
             return false
         }
         //If no supported colour is found, return false
-        else{
+        else {
             serial.writeLine("Unsupported Colour Detected")
             return false
         }
