@@ -135,6 +135,7 @@ namespace CatCar {
 
         control.waitMicros(1000)
         writePCA(chip_address, modeRegister1, restart)
+        //serial.writeLine("CatCar initialised");
     }
 
 
@@ -333,11 +334,11 @@ namespace CatCar {
         rotationsLeft = wheelrotationsLeft();
         rotationsRight = wheelrotationsRight();
 
-        serial.writeLine("rechts:")
-        serial.writeNumber(rotationsRight)
+        //serial.writeLine("rechts:")
+        //serial.writeNumber(rotationsRight)
 
-        serial.writeLine("left:")
-        serial.writeNumber(rotationsLeft)
+        //serial.writeLine("left:")
+        //serial.writeNumber(rotationsLeft)
 
 
         if (rotationsRight <= target_rps_rotor) {
@@ -528,7 +529,7 @@ namespace CatCar {
         control.waitMicros(100);
         switch (value) {
             case voorkantIR.zietIets: {
-                serial.writeNumber(pins.analogReadPin(AnalogPin.P3))
+                //serial.writeNumber(pins.analogReadPin(AnalogPin.P3))
                 if (pins.analogReadPin(AnalogPin.P3) < 800) {
 
                     temp = true;
@@ -615,6 +616,7 @@ namespace CatCar {
 
     const tcs_adress = 0x29             /**< I2C address **/
     const tcs_command_bit = 0x80        /**< Command bit **/
+    const tcs_autoincrement = 0x20
     const tcs_id = 0x12                 /**< 0x44 = TCS34721/TCS34725, 0x4D = TCS34723/TCS34727 */
 
     const tcs_enable = 0x00             /**< Interrupt Enable register */
@@ -626,6 +628,11 @@ namespace CatCar {
     const tcs_control = 0x0F            /**< Set the gain level for the sensor */
     const tcs_gain = 0x02               /**< 0x00 = No gain; 0x01 = 4x gain; 0x02 = 16x gain; 0x03 = 60x gain  */
 
+    const red_compensation = 1           //Compensation values to give each colour similar values
+    const green_compensation = 1.65 
+    const blue_compensation = 2.4
+    const colour_threshold = 175         //Threshold for comparing colours
+
     let tcs_initialised = false
 
     export enum TCSkleur {
@@ -635,7 +642,7 @@ namespace CatCar {
     }
 
     function tcs_write(reg: number, value: number): void {
-        const tcs_buffer = pins.createBuffer(2)
+        let tcs_buffer = pins.createBuffer(2)
         tcs_buffer[0] = tcs_command_bit | reg
         tcs_buffer[1] = value & 0xff
         pins.i2cWriteBuffer(tcs_adress, tcs_buffer, false)
@@ -648,12 +655,18 @@ namespace CatCar {
     }
 
     function tcs_read16(reg: number) {
-        let x = 0;
-        let t = 0;
+        let x = 0
+        let t = 0
+        
+        pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg, NumberFormat.UInt8BE)
+        x = pins.i2cReadNumber(tcs_adress, NumberFormat.UInt8BE, false)
 
-        pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg, NumberFormat.Int8LE)
+        pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg +1, NumberFormat.UInt8BE)
+        t = pins.i2cReadNumber(tcs_adress, NumberFormat.UInt8BE, false)
 
-        return pins.i2cReadNumber(tcs_adress, NumberFormat.UInt16LE)
+        x |= t << 8
+
+        return x
 
     }
 
@@ -664,11 +677,9 @@ namespace CatCar {
 
     export function tcs_init(): boolean {
         let x = 0
-        //serial.writeNumber(x)        
-        //serial.writeLine("Connected?")
 
         x = tcs_read8(tcs_id)
-        //serial.writeNumber(x)
+        ////serial.writeNumber(x)
 
         if ((x != 0x4d) && (x != 0x44) && (x != 0x10)) {
             return false;
@@ -687,9 +698,9 @@ namespace CatCar {
         returned */
         /* 12/5 = 2.4, add 1 to account for integer truncation */
         basic.pause((256 - tcs_integrationtime) * 12 / 5 + 1);
-        //serial.writeLine("YEEAAHHH")
 
         tcs_initialised = true;
+        //serial.writeLine("tcs init")
         return true;
     }
 
@@ -706,26 +717,25 @@ namespace CatCar {
         let rawGreen = 0
         let rawBlue = 0
 
-        //Take 10 samples to filter out mis-readings
-        for (let i = 0; i < 10; i++) {
-            rawRed = rawRed + tcs_read16(tcs_rdatal)
-            rawGreen = rawGreen + tcs_read16(tcs_gdatal)
-            rawBlue = rawBlue + tcs_read16(tcs_bdatal)
-        }
-        let red = rawRed / 10
-        let green = rawGreen / 10
-        let blue = rawBlue / 10
+        // //Take 10 samples to filter out mis-readings
+        // for (let i = 0; i < 10; i++) {
+        //     rawRed = rawRed + tcs_read16(tcs_rdatal)
+        //     rawGreen = rawGreen + tcs_read16(tcs_gdatal)
+        //     rawBlue = rawBlue + tcs_read16(tcs_bdatal)
+        // }
+        // let red = rawRed / 10
+        // let green = rawGreen / 10
+        // let blue = rawBlue / 10
 
-        //For debugging, print to serial
-        serial.writeValue("red", red)
-        serial.writeValue("green", green)
-        serial.writeValue("blue", blue)
-        serial.writeLine("-")
+        //Read the values limit to 700
+        let red = Math.min(tcs_read16(tcs_rdatal) * red_compensation, 700)
+        let green = Math.min(tcs_read16(tcs_gdatal) * green_compensation, 700)
+        let blue = Math.min(tcs_read16(tcs_bdatal) *blue_compensation, 700)
 
         //map to 8-bit values to give NeoPixelcolor compatible return
-        let red8 = Math.map(red, 0, 65535, 0, 255)
-        let green8 = Math.map(green, 0, 65535, 0, 255)
-        let blue8 = Math.map(blue, 0, 65535, 0, 255)
+        let red8 = Math.round(Math.map(red, 0, 700, 0, 255))
+        let green8 = Math.round(Math.map(green, 0, 700, 0, 255))
+        let blue8 = Math.round(Math.map(blue, 0, 700, 0, 255))
 
         //Put the numbers into a single variable to return (24-bits RGB code)
         let totalColour
@@ -733,12 +743,17 @@ namespace CatCar {
         totalColour |= green8 << 8
         totalColour |= blue8
 
+        // //serial.writeLine("\n----------8 bit colour values-----------")
+        // //serial.writeValue("red8", red8);
+        // //serial.writeValue("green8", green8);
+        // //serial.writeValue("blue8", blue8);
+
         return totalColour
     }
 
-    //% block="kleur is %colour"
+    //% block="lees kleur"
     //%weight=150 group="Sensors"
-    export function checkColour(colour: NeoPixelColors): boolean {
+    export function checkColour(): NeoPixelColors {
         //Read the TCS colour value
         let colourData = tcs_data();
 
@@ -746,36 +761,36 @@ namespace CatCar {
         let red = (colourData >> 16) & 0xff
         let green = (colourData >> 8) & 0xff
         let blue = colourData & 0xff
-        //Compare with threshold values for
-        //Blue
-        if ((red < 600) && (green < 250) && (blue > 200)) {
-            serial.writeLine("het is blauw")
-            if (colour === NeoPixelColors.Blue) {
-                return true
-            }
-            return false
+        //Compare with threshold values:
+        if (red > colour_threshold && green < colour_threshold && blue < colour_threshold){
+            //serial.writeLine("Red")
+            return NeoPixelColors.Red
         }
-        //Green
-        if ((red > 125) && (green < 125) && (blue > 125)) {
-            serial.writeLine("het is groen")
-            if (colour === NeoPixelColors.Green) {
-                return true
-            }
-            return false
+        else if(red < colour_threshold && green > colour_threshold && blue < colour_threshold){
+            //serial.writeLine("Green")
+            return NeoPixelColors.Green
         }
-        //Red
-        if ((red < 200) && (green < 250) && (blue > 200)) {
-            serial.writeLine("het is rood")
-            if (colour === NeoPixelColors.Red) {
-                return true
-            }
-            return false
+        else if (red < colour_threshold && green < colour_threshold && blue > colour_threshold) {
+            //serial.writeLine("Blue")
+            return NeoPixelColors.Blue
         }
-        //If no supported colour is found, return false
-        else {
-            serial.writeLine("Unsupported Colour Detected")
-            return false
+        else if (red > colour_threshold && green > colour_threshold && blue < colour_threshold) {
+            //serial.writeLine("Yellow")
+            return NeoPixelColors.Yellow
         }
+        else if (red > colour_threshold && green < colour_threshold && blue > colour_threshold) {
+            //serial.writeLine("purple")
+            return NeoPixelColors.Purple
+        }
+        else if (red < colour_threshold && green > colour_threshold && blue > colour_threshold) {
+            //serial.writeLine("Cyan")
+            return NeoPixelColors.Blue
+        }
+        else if (red > colour_threshold && green > colour_threshold && blue > colour_threshold) {
+            //serial.writeLine("White")
+            return NeoPixelColors.White
+        }
+        else return 0
     }
 }
 
