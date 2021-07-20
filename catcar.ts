@@ -233,6 +233,7 @@ namespace CatCar {
     *
     */
     //% block="Rijden %direction met snelheid %speed procent" weight=179 group="Motor"
+    //% speed.min=0 speed.max=100
     export function rijden(direction: Directions = 20, speed: number): void {
         direction = Math.constrain(direction, Directions.voorwaards, Directions.achterwaards)
         const pca_spd_value = (speed * (chipResolution - 1)) / 100
@@ -260,6 +261,7 @@ namespace CatCar {
     * @param speed - snelheid van de motor in %, eg:0-100
     */
     //% block="Draai %turning met snelheid %speed procent" weight=178 group="Motor"
+    //% speed.min=0 speed.max=100
     export function draaien(turning: Turn = 10, speed: number): void {
         turning = Math.constrain(turning, Turn.links, Turn.rechts)
         const pca_spd_value = (speed * (chipResolution - 1)) / 100
@@ -277,6 +279,24 @@ namespace CatCar {
             writeloop(14, 0, pca_spd_value)
             writeloop(15, 0, 0)
         }
+    }
+
+    /**
+    * CatCar laten draaien
+    * @param leftSpeed - speed of the left motor in percent
+    * @param rightSpeed - speed of the right motor in percent
+    */
+    //% block="Rijd met linkerwiel snelheid %leftSpeed en rechterwiel snelheid %rightSpeed" weight=178 group="Motor"
+    //% speed.min=0 speed.max=100
+    export function steer(leftSpeed: number, rightSpeed: number): void {
+        let left_pca_spd_value = (leftSpeed * (chipResolution - 1)) / 100
+        let right_pca_spd_value = (rightSpeed * (chipResolution - 1)) / 100
+
+            writeloop(12, 0, left_pca_spd_value)
+            writeloop(13, 0, 0)
+            writeloop(14, 0, 0)
+            writeloop(15, 0, right_pca_spd_value)
+        
     }
 
 
@@ -804,15 +824,17 @@ namespace CatCar {
     /**
     * Change threshold of the Colour sensor
     */
-    //% blockId="colourThreshold" block="Set colour threshold to %setpoint" weight=98 group="Motor" advanced=true
-    export function setColourThreshold(newThreshold:number): void {
+    //% blockId="colourThreshold" block="Set colour threshold to %setpoint" weight=1 group="Utility" advanced=true
+    //% newThreshold.min=0 newThreshold.max=1024
+    export function setColourThreshold(newThreshold: number): void {
         colourThreshold = newThreshold
     }
 
     /**
     * Change threshold of the Line sensor
     */
-    //% blockId="colourThreshold" block="Set colour threshold to %setpoint" weight=98 group="Motor" advanced=true
+    //% blockId="colourThreshold" block="Set colour threshold to %newThreshold" weight=1 group="Utility" advanced=true
+    //% newThreshold.min=0 newThreshold.max=1024
     export function setLineThreshold(newThreshold: number): void {
         lineThreshold = newThreshold
     }
