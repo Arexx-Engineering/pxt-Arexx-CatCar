@@ -9,7 +9,8 @@
     },
     "files": [
         "catcar.ts",
-        "README.md"
+        "README.md",
+        "test.ts"
     ],
     "public": true,
     "targetVersions": {
