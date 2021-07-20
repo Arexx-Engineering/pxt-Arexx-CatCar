@@ -13,7 +13,7 @@
 //% groups=["Motor", "LED", "Sensors","Utility"]
 namespace CatCar {
 
-    resetLedsEnMotor(); //Does this work? to just always have this function started at boot?
+    resetLedsEnMotor();
     /**
      * PCA9685 registers and adresses
     */
@@ -498,6 +498,9 @@ namespace CatCar {
         //% blockId="rightLineSensor" block="rechts"
         rechts = 1
     }
+    let lineThreshold = 750
+
+
     //% group="Sensors"
     export enum lijnKleur {
         //% blockId="White" block="wit"
@@ -568,10 +571,11 @@ namespace CatCar {
     export function Line_Sensor(linksRechts: lijnSensor, kleur: lijnKleur): boolean {
 
         let temp: boolean = false;
-
+        //serial.writeValue("Left", pins.analogReadPin(AnalogPin.P2))
+        //serial.writeValue("Right", pins.analogReadPin(AnalogPin.P1))
         switch (linksRechts) {
             case lijnSensor.links: {
-                if (pins.analogReadPin(AnalogPin.P2) < 500) {
+                if (pins.analogReadPin(AnalogPin.P2) < lineThreshold) {
                     if (kleur == lijnKleur.wit) {
                         temp = true;
                     }
@@ -585,7 +589,7 @@ namespace CatCar {
             }
 
             case lijnSensor.rechts: {
-                if (pins.analogReadPin(AnalogPin.P1) < 500) {
+                if (pins.analogReadPin(AnalogPin.P1) < lineThreshold) {
                     if (kleur == lijnKleur.wit) {
                         temp = true;
                     }
@@ -629,9 +633,9 @@ namespace CatCar {
     const tcs_gain = 0x02               /**< 0x00 = No gain; 0x01 = 4x gain; 0x02 = 16x gain; 0x03 = 60x gain  */
 
     const red_compensation = 1           //Compensation values to give each colour similar values
-    const green_compensation = 1.65 
+    const green_compensation = 1.65
     const blue_compensation = 2.4
-    const colour_threshold = 175         //Threshold for comparing colours
+    let colourThreshold = 175         //Threshold for comparing colours
 
     let tcs_initialised = false
 
@@ -657,11 +661,11 @@ namespace CatCar {
     function tcs_read16(reg: number) {
         let x = 0
         let t = 0
-        
+
         pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg, NumberFormat.UInt8BE)
         x = pins.i2cReadNumber(tcs_adress, NumberFormat.UInt8BE, false)
 
-        pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg +1, NumberFormat.UInt8BE)
+        pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg + 1, NumberFormat.UInt8BE)
         t = pins.i2cReadNumber(tcs_adress, NumberFormat.UInt8BE, false)
 
         x |= t << 8
@@ -730,7 +734,7 @@ namespace CatCar {
         //Read the values limit to 700
         let red = Math.min(tcs_read16(tcs_rdatal) * red_compensation, 700)
         let green = Math.min(tcs_read16(tcs_gdatal) * green_compensation, 700)
-        let blue = Math.min(tcs_read16(tcs_bdatal) *blue_compensation, 700)
+        let blue = Math.min(tcs_read16(tcs_bdatal) * blue_compensation, 700)
 
         //map to 8-bit values to give NeoPixelcolor compatible return
         let red8 = Math.round(Math.map(red, 0, 700, 0, 255))
@@ -762,35 +766,54 @@ namespace CatCar {
         let green = (colourData >> 8) & 0xff
         let blue = colourData & 0xff
         //Compare with threshold values:
-        if (red > colour_threshold && green < colour_threshold && blue < colour_threshold){
+        if (red > colourThreshold && green < colourThreshold && blue < colourThreshold) {
             //serial.writeLine("Red")
             return NeoPixelColors.Red
         }
-        else if(red < colour_threshold && green > colour_threshold && blue < colour_threshold){
+        else if (red < colourThreshold && green > colourThreshold && blue < colourThreshold) {
             //serial.writeLine("Green")
             return NeoPixelColors.Green
         }
-        else if (red < colour_threshold && green < colour_threshold && blue > colour_threshold) {
+        else if (red < colourThreshold && green < colourThreshold && blue > colourThreshold) {
             //serial.writeLine("Blue")
             return NeoPixelColors.Blue
         }
-        else if (red > colour_threshold && green > colour_threshold && blue < colour_threshold) {
+        else if (red > colourThreshold && green > colourThreshold && blue < colourThreshold) {
             //serial.writeLine("Yellow")
             return NeoPixelColors.Yellow
         }
-        else if (red > colour_threshold && green < colour_threshold && blue > colour_threshold) {
+        else if (red > colourThreshold && green < colourThreshold && blue > colourThreshold) {
             //serial.writeLine("purple")
             return NeoPixelColors.Purple
         }
-        else if (red < colour_threshold && green > colour_threshold && blue > colour_threshold) {
+        else if (red < colourThreshold && green > colourThreshold && blue > colourThreshold) {
             //serial.writeLine("Cyan")
             return NeoPixelColors.Blue
         }
-        else if (red > colour_threshold && green > colour_threshold && blue > colour_threshold) {
+        else if (red > colourThreshold && green > colourThreshold && blue > colourThreshold) {
             //serial.writeLine("White")
             return NeoPixelColors.White
         }
         else return 0
     }
-}
 
+
+    /**--------------------------------------------------------------
+     *          THRESHOLD VALUE CHANGES
+     * ------------------------------------------------------------*/
+    /**
+    * Change threshold of the Colour sensor
+    */
+    //% blockId="colourThreshold" block="Set colour threshold to %setpoint" weight=98 group="Motor" advanced=true
+    export function setColourThreshold(newThreshold:number): void {
+        colourThreshold = newThreshold
+    }
+
+    /**
+    * Change threshold of the Line sensor
+    */
+    //% blockId="colourThreshold" block="Set colour threshold to %setpoint" weight=98 group="Motor" advanced=true
+    export function setLineThreshold(newThreshold: number): void {
+        lineThreshold = newThreshold
+    }
+}
