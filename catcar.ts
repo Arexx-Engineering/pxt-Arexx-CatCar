@@ -652,9 +652,9 @@ namespace CatCar {
     const tcs_control = 0x0F            /**< Set the gain level for the sensor */
     const tcs_gain = 0x02               /**< 0x00 = No gain; 0x01 = 4x gain; 0x02 = 16x gain; 0x03 = 60x gain  */
 
-    const red_compensation = 1           //Compensation values to give each colour similar values
-    const green_compensation = 1.65
-    const blue_compensation = 2.4
+    let red_compensation = 1           //Compensation values to give each colour similar values
+    let green_compensation = 1.65
+    let blue_compensation = 2.4
     let colourThreshold = 175         //Threshold for comparing colours
 
     let tcs_initialised = false
@@ -828,6 +828,17 @@ namespace CatCar {
     //% newThreshold.min=0 newThreshold.max=1024
     export function setColourThreshold(newThreshold: number): void {
         colourThreshold = newThreshold
+    }
+    
+    /**
+    *   Change the Colour Compensation values
+    */
+    //% blockId="Colour Compensation" block="Set colour compensation vlaues to red%r, green%g and blue%b"
+    //%"weigth=1 group="Utility" advanced=true
+    export function setColourCompensation(r:number, g:number, b:number):void{
+        red_compensation = r
+        green_compensation=g
+        blue_compensation=b
     }
 
     /**
