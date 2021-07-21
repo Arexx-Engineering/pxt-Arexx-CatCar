@@ -1,16 +1,16 @@
 
-## Gebruiken als extensie
+## Use as an Extension
 
-Deze repository kan worden toegevoegd als **extensie** in MakeCode.
+The code in this GitHub Repository can be used as an extension for the BBC Micro:Bit.
 
 * open [https://makecode.microbit.org/](https://makecode.microbit.org/)
-* klik op **Nieuw project**
-* klik op **Extensies** onder het tandwielmenu
-* zoeken naar **https://github.com/arexxx/library-catcar** en importeren
+* Create a new project
+* Click the gear on the top-right and select "Extensions"
+* type http://github.com/Arexx-Engineering/pxt-Arexx-CatCar and select the extension to import it
 
-## Dit project bewerken ![Badge buildstatus](https://github.com/Arexx-Engineering/library-catcar/workflows/MakeCode/badge.svg)
+## Edit this project
 
-Om deze repository te bewerken in MakeCode.
+Open the repository in Micro:Bit MakeCode
 
 * open [https://makecode.microbit.org/](https://makecode.microbit.org/)
 * klik op **Importeren** en klik vervolgens op **Importeer URL**
