@@ -741,20 +741,20 @@ namespace CatCar {
         let rawGreen = 0
         let rawBlue = 0
 
-        // //Take 10 samples to filter out mis-readings
-        // for (let i = 0; i < 10; i++) {
-        //     rawRed = rawRed + tcs_read16(tcs_rdatal)
-        //     rawGreen = rawGreen + tcs_read16(tcs_gdatal)
-        //     rawBlue = rawBlue + tcs_read16(tcs_bdatal)
-        // }
-        // let red = rawRed / 10
-        // let green = rawGreen / 10
-        // let blue = rawBlue / 10
+        //Take 5 samples to filter out mis-readings
+        for (let i = 0; i < 5; i++) {
+            rawRed = rawRed + tcs_read16(tcs_rdatal)
+            rawGreen = rawGreen + tcs_read16(tcs_gdatal)
+            rawBlue = rawBlue + tcs_read16(tcs_bdatal)
+        }
+        let noCompensationRed = rawRed / 5
+        let noCompensationGreen = rawGreen / 5
+        let noCompensationBlue = rawBlue / 5
 
         //Read the values limit to 700
-        let red = Math.min(tcs_read16(tcs_rdatal) * red_compensation, 700)
-        let green = Math.min(tcs_read16(tcs_gdatal) * green_compensation, 700)
-        let blue = Math.min(tcs_read16(tcs_bdatal) * blue_compensation, 700)
+        let red = Math.min(noCompensationRed * red_compensation, 700)
+        let green = Math.min(noCompensationGreen * green_compensation, 700)
+        let blue = Math.min(noCompensationBlue * blue_compensation, 700)
 
         //map to 8-bit values to give NeoPixelcolor compatible return
         let red8 = Math.round(Math.map(red, 0, 700, 0, 255))
