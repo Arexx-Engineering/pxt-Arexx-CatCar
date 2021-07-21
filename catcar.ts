@@ -737,9 +737,9 @@ namespace CatCar {
         if (!tcs_initialised) {
             tcs_init();
         }
-        // let rawRed = 0
-        // let rawGreen = 0
-        // let rawBlue = 0
+        let rawRed = 0
+        let rawGreen = 0
+        let rawBlue = 0
 
         //Take 5 samples to filter out mis-readings
         for (let i = 0; i < 5; i++) {
