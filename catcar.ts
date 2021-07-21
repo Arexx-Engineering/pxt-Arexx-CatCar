@@ -135,7 +135,7 @@ namespace CatCar {
 
         control.waitMicros(1000)
         writePCA(chip_address, modeRegister1, restart)
-        //serial.writeLine("CatCar initialised");
+        serial.writeLine("CatCar initialised");
     }
 
 
