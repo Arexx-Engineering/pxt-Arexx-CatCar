@@ -13,15 +13,15 @@
 //% groups=["Motor", "LED", "Sensors","Utility"]
 namespace CatCar {
 
-    resetLedsEnMotor();
+    init();
     /**
      * PCA9685 registers and adresses
     */
     const chip_address = 65      //I2C address
 
     const chipResolution = 4096; //chip has 12-bit resolution
-    const PrescaleReg = 0xFE     //the prescale register address
-    const PinRegDistance = 4    //
+    const prescaleReg = 0xFE     //the prescale register address
+    const pinRegDistance = 4    //
     const osc_clock = 25000000  //SPI frequency
     const pca_frequency = 200   //PWM output frequency
 
@@ -64,14 +64,14 @@ namespace CatCar {
 
     //Directional Enums
     //% group="Utility"
-    export enum Turn {
-        links = 10,
-        rechts = 11,
+    export enum rotations {
+        left = 10,
+        right = 11,
     }
     //% group="Utility"
-    export enum Directions {
-        voorwaards = 20,
-        achterwaards = 21,
+    export enum directions {
+        forwards = 20,
+        backwards = 21,
     }
 
 
@@ -96,7 +96,7 @@ namespace CatCar {
     function writeloop(pinNumber: number, onStep: number = 0, offStep: number = 2048): void {
         pinNumber = Math.constrain(pinNumber, 0, 15)
         const buffer = pins.createBuffer(2)
-        const pinOffset = PinRegDistance * pinNumber
+        const pinOffset = pinRegDistance * pinNumber
         onStep = Math.constrain(onStep, 0, chipResolution - 1)
         offStep = Math.constrain(offStep, 0, chipResolution - 1)
 
@@ -119,12 +119,12 @@ namespace CatCar {
      */
     //% block weight=199 group="utility"
     //% block="Initialiseer CatCar"
-    export function resetLedsEnMotor(): void {
+    export function init(): void {
         const prescaler = (osc_clock / (pca_frequency * chipResolution)) - 1;
 
         writePCA(chip_address, modeRegister1, sleep)
 
-        writePCA(chip_address, PrescaleReg, prescaler)
+        writePCA(chip_address, prescaleReg, prescaler)
 
         writePCA(chip_address, allChannelsOnStepLowByte, 0x00)
         writePCA(chip_address, allChannelsOnStepHighByte, 0x00)
@@ -228,24 +228,24 @@ namespace CatCar {
 
     /**
     * CatCar vooruit of achteruit rijden
-    * @param direction - vooruit of achteruit (enum Directions)
+    * @param direction - vooruit of achteruit (enum directions)
     * @param speed  -snelheid van de motor in %, eg:0-100
     *
     */
     //% block="Rijden %direction met snelheid %speed procent" weight=179 group="Motor"
     //% speed.min=0 speed.max=100
-    export function rijden(direction: Directions = 20, speed: number): void {
-        direction = Math.constrain(direction, Directions.voorwaards, Directions.achterwaards)
+    export function drive(direction: directions = 20, speed: number): void {
+        direction = Math.constrain(direction, directions.forwards, directions.backwards)
         const pca_spd_value = (speed * (chipResolution - 1)) / 100
 
-        if (direction === Directions.voorwaards) {
+        if (direction === directions.forwards) {
             writeloop(12, 0, pca_spd_value)
             writeloop(13, 0, 0)
             writeloop(14, 0, 0)
             writeloop(15, 0, pca_spd_value)
         }
 
-        if (direction === Directions.achterwaards) {
+        if (direction === directions.backwards) {
             writeloop(12, 0, 0)
             writeloop(13, 0, pca_spd_value)
             writeloop(14, 0, pca_spd_value)
@@ -257,23 +257,23 @@ namespace CatCar {
 
     /**
     * CatCar laten draaien
-    * @param turning - Linksom of rechtsom (enum Turn)
+    * @param turning - Linksom of rechtsom (enum rotations)
     * @param speed - snelheid van de motor in %, eg:0-100
     */
     //% block="Draai %turning met snelheid %speed procent" weight=178 group="Motor"
     //% speed.min=0 speed.max=100
-    export function draaien(turning: Turn = 10, speed: number): void {
-        turning = Math.constrain(turning, Turn.links, Turn.rechts)
+    export function rotate(turning: rotations = 10, speed: number): void {
+        turning = Math.constrain(turning, rotations.left, rotations.right)
         const pca_spd_value = (speed * (chipResolution - 1)) / 100
 
-        if (turning === Turn.links) {
+        if (turning === rotations.left) {
             writeloop(12, 0, 0)
             writeloop(13, 0, pca_spd_value)
             writeloop(14, 0, 0)
             writeloop(15, 0, pca_spd_value)
         }
 
-        if (turning === Turn.rechts) {
+        if (turning === rotations.right) {
             writeloop(12, 0, pca_spd_value)
             writeloop(13, 0, 0)
             writeloop(14, 0, pca_spd_value)
@@ -306,7 +306,7 @@ namespace CatCar {
     *
     */
     //% block="Stoppen met rijden" weight=177 group="Motor"
-    export function stoppenrijden(): void {
+    export function stopDriving(): void {
         writeloop(12, 0, 0)
         writeloop(13, 0, 0)
         writeloop(14, 0, 0)
@@ -324,7 +324,7 @@ namespace CatCar {
     *
     */
     //% block="rijden %direction met snelheid %speed cm/s" weight=169 group="Motor"
-    export function rijdensnelheid(direction: Directions = 20, speed: number): void {
+    export function driveSpeed(direction: directions = 20, speed: number): void {
         led.enable(false)
         direction = Math.max(20, Math.min(21, direction))
         speed = Math.max(5, Math.min(20, speed))
@@ -512,24 +512,24 @@ namespace CatCar {
 
 
     //% group="Sensors"
-    export enum lijnSensor {
+    export enum lineSensors {
         //% blockId="LeftlineSensor" block="links"
-        links = 0,
+        left = 0,
         //% blockId="rightLineSensor" block="rechts"
-        rechts = 1
+        right = 1
     }
     let lineThreshold = 750
 
 
     //% group="Sensors"
-    export enum lijnKleur {
+    export enum lineColour {
         //% blockId="White" block="wit"
-        wit = 0,
+        white = 0,
         //% blockId="Black" block="zwart"
-        zwart = 1
+        black = 1
     }
     //% group="Sensors"
-    export enum voorkantIR {
+    export enum IRobstacle {
         //% blockId="OBSTACLE" block="iets"
         zietIets = 0,
         //% blockId="NOOBSTACLE" block="niets"
@@ -544,14 +544,14 @@ namespace CatCar {
     //% weight=95 group="Sensors"
     //% blockGap=10
     //% name.fieldEditor="gridpicker" name.fieldOptions.columns=12
-    export function Avoid_Sensor(value: voorkantIR): boolean {
+    export function frontIR(value: IRobstacle): boolean {
 
         let temp: boolean = false;
         pins.setPull(DigitalPin.P9, PinPullMode.PullUp)
         pins.digitalWritePin(DigitalPin.P9, 0);
         control.waitMicros(100);
         switch (value) {
-            case voorkantIR.zietIets: {
+            case IRobstacle.zietIets: {
                 //serial.writeNumber(pins.analogReadPin(AnalogPin.P3))
                 if (pins.analogReadPin(AnalogPin.P3) < 800) {
 
@@ -563,7 +563,7 @@ namespace CatCar {
                 break;
             }
 
-            case voorkantIR.zietNiets: {
+            case IRobstacle.zietNiets: {
                 if (pins.analogReadPin(AnalogPin.P3) > 800) {
 
                     temp = true;
@@ -588,34 +588,34 @@ namespace CatCar {
     //% weight=94 group="Sensors"
     //% blockGap=10
     //% name.fieldEditor="gridpicker" name.fieldOptions.columns=12
-    export function Line_Sensor(linksRechts: lijnSensor, kleur: lijnKleur): boolean {
+    export function lineSensor(linksRechts: lineSensors, kleur: lineColour): boolean {
 
         let temp: boolean = false;
         //serial.writeValue("Left", pins.analogReadPin(AnalogPin.P2))
         //serial.writeValue("Right", pins.analogReadPin(AnalogPin.P1))
         switch (linksRechts) {
-            case lijnSensor.links: {
+            case lineSensors.left: {
                 if (pins.analogReadPin(AnalogPin.P2) < lineThreshold) {
-                    if (kleur == lijnKleur.wit) {
+                    if (kleur == lineColour.white) {
                         temp = true;
                     }
                 }
                 else {
-                    if (kleur == lijnKleur.zwart) {
+                    if (kleur == lineColour.black) {
                         temp = true;
                     }
                 }
                 break;
             }
 
-            case lijnSensor.rechts: {
+            case lineSensors.right: {
                 if (pins.analogReadPin(AnalogPin.P1) < lineThreshold) {
-                    if (kleur == lijnKleur.wit) {
+                    if (kleur == lineColour.white) {
                         temp = true;
                     }
                 }
                 else {
-                    if (kleur == lijnKleur.zwart) {
+                    if (kleur == lineColour.black) {
                         temp = true;
                     }
                 }
@@ -659,11 +659,6 @@ namespace CatCar {
 
     let tcs_initialised = false
 
-    export enum TCSkleur {
-        rood,
-        groen,
-        blauw
-    }
 
     function tcs_write(reg: number, value: number): void {
         let tcs_buffer = pins.createBuffer(2)
@@ -681,17 +676,12 @@ namespace CatCar {
     function tcs_read16(reg: number) {
         let x = 0
         let t = 0
-
         pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg, NumberFormat.UInt8BE)
         x = pins.i2cReadNumber(tcs_adress, NumberFormat.UInt8BE, false)
-
         pins.i2cWriteNumber(tcs_adress, tcs_command_bit | reg + 1, NumberFormat.UInt8BE)
         t = pins.i2cReadNumber(tcs_adress, NumberFormat.UInt8BE, false)
-
         x |= t << 8
-
         return x
-
     }
 
 
@@ -733,7 +723,7 @@ namespace CatCar {
 
     //% block="kleuren sensor uitlezen"
     //% weight=153 group="Sensors" advanced=true
-    export function tcs_data(): number {
+    export function getColourRaw(): number {
         if (!tcs_initialised) {
             tcs_init();
         }
@@ -783,7 +773,7 @@ namespace CatCar {
     //%weight=150 group="Sensors"
     export function checkColour(): NeoPixelColors {
         //Read the TCS colour value
-        let colourData = tcs_data();
+        let colourData = getColourRaw();
 
         //Convert to seperate colours (for now)
         let red = (colourData >> 16) & 0xff
