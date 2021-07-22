@@ -151,7 +151,7 @@ namespace CatCar {
     //% block="Maak koplampen: Rood%frontred Groen%frontgreen Blauw%frontblue" 
     //% weight=189 group="LEDs"
     //% frontred.max=100 frontred.min=0 frontgreen.max=100 frontgreen.min=0 frontblue.max=100 frontblue.min=0 
-    export function maakKoplampen(frontred: number, frontgreen: number, frontblue: number): void {
+    export function headLights(frontred: number, frontgreen: number, frontblue: number): void {
         frontred = Math.max(0, Math.min(100, frontred))
         const pwm_fr = (frontred * (chipResolution - 1)) / 100
         writeloop(0, 0, pwm_fr)
@@ -176,7 +176,7 @@ namespace CatCar {
     //% backred.min=0 backred.max=100
     //% backLyellow.min=0 backLyellow.max=100
     //% backRyellow.min=0 backRyellow.max=100
-    export function maakAchterlampen(backLyellow: number, backred: number, backRyellow: number): void {
+    export function rearlights(backLyellow: number, backred: number, backRyellow: number): void {
         backLyellow = Math.max(0, Math.min(100, backLyellow))
         //Convert value from 0-100 to 0-4095 for PCA chip
         const pwm_bly = (backLyellow * (chipResolution - 1)) / 100
@@ -201,7 +201,7 @@ namespace CatCar {
      * @param midblue - Set percentage for the blue LED
      */
     //% block="Maak midden leds: rood%midred geel%midyellow blauw%midblue" weight=187 group="LEDs"
-    export function maakMiddenLeds(midred: number, midyellow: number, midblue: number): void {
+    export function midLeds(midred: number, midyellow: number, midblue: number): void {
         midred = Math.max(0, Math.min(100, midred))
         //midLeds are active low (current sink through PCA chip) so invert set value:
         Math.map(midred, 0, 100, 100, 0)
@@ -827,8 +827,8 @@ namespace CatCar {
     /**
     *   Change the Colour Compensation values
     */
-    //% blockId="Colour Compensation" block="Set colour compensation vlaues to red%r, green%g and blue%b"
-    //%"weigth=1 group="Utility" advanced=true
+    //% blockId="Colour Compensation" block="Set colour compensation values to red%r, green%g and blue%b"
+    //% weigth=1 group="Utility" advanced=true
     export function setColourCompensation(r:number, g:number, b:number):void{
         red_compensation = r
         green_compensation=g
